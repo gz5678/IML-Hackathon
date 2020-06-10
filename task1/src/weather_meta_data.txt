@@ -1,0 +1,22 @@
+station : Common identifier for the station.
+day : Calendar date of the summary.
+max_temp_f : Maximum Air Temperature [F].
+min_temp_f : Minimum Air Temperature [F].
+max_dewpoint_f : Maximum Dew Point [F].
+min_dewpoint_f : Minimum Dew Point [F].
+precip_in : Daily Precipitation [inch].
+avg_wind_speed_kts : Average Wind Speed [knots]
+avg_wind_drct : Average Wind Direction [deg]
+min_rh : Minimum Relative Humidity [%]
+avg_rh : Average Relative Humidity [%]: computed by time averaging the available reports, it is not average of the daily max/min.
+max_rh : Maximum Relative Humidity [%]
+climo_high_f : NCDC 1981-2010 Daily High Temperature Climatology [F]
+climo_low_f : NCDC 1981-2010 Daily Low Temperature Climatology [F]
+climo_precip_in : NCDC 1981-2010 Daily Precipitation Climatology [inch]
+snow_in : Reported Snowfall [inch]
+snowd_in : Reported Snow Depth [inch]
+min_feel : Minimum "Feels Like" (either wind chill or heat index) temperature. The value is always at least the air temperature.
+avg_feel : Average "Feels Like" (either wind chill or heat index) temperature. The value is always at least the air temperature. Value is a time weighted average.
+max_feel : Maximum "Feels Like" (either wind chill or heat index) temperature. The value is always at least the air temperature.
+max_wind_speed_kts : Maximum sustained wind speed in knots.
+max_wind_gust_kts : Maximum wind gust in knots.
