@@ -40,6 +40,17 @@ class FlightPredictor:
         X_val, X_test, y_val, y_test = train_test_split(X_test, y_test, test_size=0.5, shuffle=True)
         X_train = pre_funcs.fix_weather_data(X_train)
         X_train = pre_funcs.all_categoricals(X_train)
+        
+        X_val= pre_funcs.fix_weather_test_data(X_val)
+        X_val= pre_funcs.all_categoricals(X_val)
+        
+        X_test = pre_funcs.fix_weather_test_data(X_test)
+        X_test = pre_funcs.all_categoricals(X_test)
+        
+        ## remove na's
+        y_train = y_train[-X_train.isnull().any(axis=1)]
+        X_train = X_train[-X_train.isnull().any(axis=1)]
+        
         raise NotImplementedError
 
     def predict(self, x):
