@@ -105,17 +105,18 @@ def fix_weather_test_data(weather_data):
     """
     weather_data['month'] = [item[1] for item in weather_data['FlightDate'].str.split(pat="-")]
     for prefix in ['_origin', '_dest']:
-
+        
         if prefix == '_origin':
             state = 'OriginState'
         else:
             if prefix == '_dest':
                 state = 'DestState'
             else:
-                pass
-
+                    pass
+        
+        
         varlist = ['max_temp_f', 'min_temp_f', 'max_dewpoint_f', 'min_dewpoint_f',
-                   'avg_wind_speed_kts', 'avg_wind_drct', 'min_rh', 'avg_rh', 'max_rh',
+                   'avg_wind_speed_kts','avg_wind_drct', 'min_rh', 'avg_rh', 'max_rh',
                    'max_wind_speed_kts', 'max_wind_gust_kts']
         varlist = list(map(lambda org_string: org_string + prefix, varlist))
         drop_columns = ['min_feel', 'avg_feel', 'max_feel', 'climo_high_f', 'climo_low_f', 'climo_precip_in']
@@ -125,15 +126,14 @@ def fix_weather_test_data(weather_data):
         none_columns = list(map(lambda org_string: org_string + prefix, none_columns))
 
         weather_data = weather_data.drop(columns=drop_columns)
-        weather_data[none_columns] = weather_data[none_columns].replace(to_replace=["None", "-100", "-99", np.nan],
-                                                                        value=0)
-        weather_data[varlist] = weather_data[varlist].replace(to_replace=["None", "-100", "-99", np.nan], value=-1000)
+        weather_data[none_columns] = weather_data[none_columns].replace(to_replace=["None","-100","-99",np.nan], value=0)
+        weather_data[none_columns] = weather_data[none_columns].apply(pd.to_numeric)
+        weather_data[varlist] = weather_data[varlist].replace(to_replace=["None","-100","-99", np.nan], value=-1000)
         weather_data[varlist] = weather_data[varlist].apply(pd.to_numeric)
         max_temp_pref = 'max_temp_f' + prefix
         weather_data[max_temp_pref][weather_data[max_temp_pref] > 130] = -1000
         weather_data[varlist] = weather_data[varlist].replace(to_replace=[-1000], value=np.nan)
-        weather_data[varlist] = weather_data[varlist].fillna(
-            weather_data.groupby([state, 'month'])[varlist].transform('mean'))
+        weather_data[varlist] = weather_data[varlist].fillna(weather_data.groupby([state,'month'])[varlist].transform('mean'))
         weather_data[varlist] = weather_data[varlist].fillna(weather_data.groupby(['month'])[varlist].transform('mean'))
-    weather_data.drop(columns=['month'])
+    weather_data = weather_data.drop(columns='month', axis = 1)
     return weather_data
