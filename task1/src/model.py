@@ -15,8 +15,9 @@ from plotnine import *
 import re
 import feather
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 import preprocessing_funcs as pre_funcs
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.linear_model import LinearRegression
 
 class FlightPredictor:
     def __init__(self, path_to_weather='all_weather_data.csv'):
@@ -35,7 +36,7 @@ class FlightPredictor:
         # merged_table.to_pickle('merged_table.pkl')
         # merged_table = pd.read_pickle('merged_table.pkl')
         y = merged_table['ArrDelay']
-        X = merged_table.drop(columns=['ArrDelay', 'DelayFactor'])
+        X = merged_table.drop(columns=['ArrDelay', 'DelayFactor', 'Tail_Number', 'Flight_Number_Reporting_Airline'])
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True)
         X_val, X_test, y_val, y_test = train_test_split(X_test, y_test, test_size=0.5, shuffle=True)
         X_train = pre_funcs.fix_weather_data(X_train)
@@ -50,7 +51,22 @@ class FlightPredictor:
         ## remove na's
         y_train = y_train[-X_train.isnull().any(axis=1)]
         X_train = X_train[-X_train.isnull().any(axis=1)]
-        
+
+        X_train = pre_funcs.date_to_timestamp(X_train)
+        # X_train.to_pickle('x_train.pkl')
+        # y_train.to_pickle('y_train.pkl')
+        # X_train = pd.read_pickle('x_train.pkl')
+        # y_train = pd.read_pickle('y_train.pkl')
+        X_train_short = X_train.iloc[:50000, :]
+        y_train_short = y_train.iloc[:50000]
+        full_df = pd.concat([X_train_short, y_train_short], axis=1)
+        full_df = full_df.dropna()
+        y_train_short = full_df['ArrDelay']
+        X_train_short = full_df.drop(columns=['ArrDelay'])
+        model = LinearRegression().fit(X_train_short, y_train_short)
+        y_pred = model.predict(X_train_short)
+        print(mean_squared_error(y_train_short, y_pred))
+        print(mean_squared_error(y_train_short, np.full(y_train_short.shape, y_train_short.mean())))
         raise NotImplementedError
 
     def predict(self, x):

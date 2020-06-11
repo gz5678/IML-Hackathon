@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib as plt
 from sklearn.preprocessing import LabelBinarizer
 import re
-from plotnine import *זז
+from plotnine import *
 import inflect
 
 
@@ -14,7 +14,7 @@ def fix_weather_data(weather_data):
     * change all columns except date and station to numeric
     * replace temperatures over 130 farenheit with nan
     """
-    for prefix in ['_origin', '_dest']:
+    for prefix, col_start in zip(['_origin', '_dest'],[13, 27]):
         varlist = ['max_temp_f', 'min_temp_f', 'max_dewpoint_f', 'min_dewpoint_f',
                    'avg_wind_speed_kts','avg_wind_drct', 'min_rh', 'avg_rh', 'max_rh',
                    'max_wind_speed_kts', 'max_wind_gust_kts']
@@ -26,9 +26,9 @@ def fix_weather_data(weather_data):
         none_columns = list(map(lambda org_string: org_string + prefix, none_columns))
 
         weather_data = weather_data.drop(columns=drop_columns)
-        weather_data[none_columns] = weather_data[none_columns].replace(to_replace=["None","-100","-99"], value=0)
-        weather_data = weather_data.replace(to_replace=["None","-100","-99", np.nan], value=-1000)
-        weather_data.iloc[:,15:] = weather_data.iloc[:,15:].apply(pd.to_numeric)
+        weather_data[none_columns] = weather_data[none_columns].replace(to_replace=["None","-100","-99", np.nan], value=0)
+        weather_data[varlist] = weather_data[varlist].replace(to_replace=["None","-100","-99", np.nan], value=-1000)
+        weather_data.iloc[:, col_start:col_start+14] = weather_data.iloc[:, col_start:col_start+14].apply(pd.to_numeric)
         max_temp_pref = 'max_temp_f' + prefix
         weather_data[max_temp_pref][weather_data[max_temp_pref] > 130] = -1000
         weather_data[varlist] = weather_data[varlist].replace(to_replace=[-1000], value=np.nan)
@@ -67,6 +67,11 @@ def crs_to_time(df):
         df['temp'] = df[col_name].apply(lambda x: p.number_to_words(int(x / 6)))
         print(df['temp'].head())
         df = pd.get_dummies(df, prefix=dummy_pred, columns=['temp'], drop_first=True)
+    return df
+
+
+def date_to_timestamp(df):
+    df['FlightDate'] = pd.to_datetime(df['FlightDate'], format="%d-%m-%y").apply(lambda x: x.timestamp())
     return df
 
 
