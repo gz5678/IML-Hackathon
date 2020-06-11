@@ -52,11 +52,9 @@ def crs_to_time(df):
         df[col] = time_col
     return df
 
-def make_categorical(name,df = merged_data):
-    LabBin = LabelBinarizer()
-    LabBin.fit(df[name])
-    binarized = np.array(LabBin.transform(df[name]))
-    return binarized[1:,:]
+def make_categorical(name,df):
+    dummies = pd.get_dummies(pd.Series(df[name]), drop_first=True, prefix = name)
+    return dummies
 
 
 def all_categoricals(merged_data):
@@ -72,8 +70,9 @@ def all_categoricals(merged_data):
     
     
     
-    flights_binarized = pd.DataFrame(np.concatenate((Reporting_Airline_bin,Origin_bin,OriginState_bin,Dest_bin,
-                                        DestState_bin),axis=1))
+    flights_binarized = pd.concat(([Reporting_Airline_bin,Origin_bin,OriginState_bin,Dest_bin,
+                                        DestState_bin]),axis=1)
     
     merged_data = merged_data.drop(['Reporting_Airline', 'Origin','OriginCityName','OriginState','Dest','DestCityName','DestState'], axis=1)
     merged_data = pd.concat([merged_data, flights_binarized], axis=1)
+    return merged_data
