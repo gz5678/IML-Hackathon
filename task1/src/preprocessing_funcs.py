@@ -11,6 +11,7 @@ def fix_weather_data(weather_data):
     * change all columns except date and station to numeric
     * replace temperatures over 130 farenheit with nan
     """
+    weather_data = weather_data.drop(columns=['min_feel', 'avg_feel', 'max_feel', 'climo_high_f', 'climo_low_f', 'climo_precip_in'])
     weather_data.replace(to_replace=["None","-100","-99"], value=np.nan, inplace=True)    
     weather_data.iloc[:,2:] = weather_data.iloc[:,2:].apply(pd.to_numeric)    
     weather_data['max_temp_f'][weather_data['max_temp_f']>130] = np.nan
