@@ -7,6 +7,7 @@ from plotnine import *
 import inflect
 
 
+
 def fix_weather_data(weather_data):
     """
     * replace "None" string and -100,-99 with nan
@@ -77,3 +78,23 @@ def all_categoricals(merged_data):
     merged_data = merged_data.drop(['Reporting_Airline', 'Origin','OriginCityName','OriginState','Dest','DestCityName','DestState'], axis=1)
     merged_data = pd.concat([merged_data, flights_binarized], axis=1)
     return merged_data
+
+def fix_test_weather_data(weather_data):
+    """
+    * replace "None" string, -100,-99, nan with mean of station and month
+    * change all columns except date and station to numeric
+    * replace temperatures over 130 farenheit with nan
+    """
+    weather_data['month'] = [item[1] for item in weather_data['day'].str.split(pat="-")]
+    weather_data = weather_data.drop(columns=['min_feel', 'avg_feel', 'max_feel', 'climo_high_f', 'climo_low_f', 'climo_precip_in'])
+    weather_data[['snow_in', 'snowd_in', 'precip_in']] = weather_data[['snow_in', 'snowd_in', 'precip_in']].replace(to_replace=["None","-100","-99"], value=0)
+    
+    varlist = ['max_temp_f','min_temp_f','max_dewpoint_f','min_dewpoint_f','avg_wind_speed_kts','avg_wind_drct','min_rh','avg_rh','max_rh','max_wind_speed_kts','max_wind_gust_kts']
+    weather_data[varlist] = weather_data[varlist].replace(to_replace=["None","-100","-99",np.nan], value=-1000)
+    weather_data.iloc[:,2:] = weather_data.iloc[:,2:].apply(pd.to_numeric)
+    weather_data['max_temp_f'][weather_data['max_temp_f']>130] = -1000
+    weather_data[varlist] = weather_data[varlist].replace(to_replace=[-1000], value=np.nan)
+    weather_data[varlist] = weather_data[varlist].fillna(weather_data.groupby(['station','month'])[varlist].transform('mean'))
+    weather_data.drop(columns=['month'])
+    return weather_data
+
