@@ -14,6 +14,7 @@ from sklearn.linear_model import Lasso,LinearRegression,Ridge
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor,AdaBoostRegressor,BaggingRegressor
 from sklearn.metrics import mean_absolute_error,mean_squared_error,r2_score
+from tqdm import tqdm
 
 
 def my_cross(X_train, y_train, model):
@@ -25,7 +26,7 @@ def my_cross(X_train, y_train, model):
  :return 5 fold cross validation test score 
  """""""""
  cv = cross_validate(model, X_train, y_train, scoring='neg_mean_squared_error')
- return cv['test_score']
+ return cv
 
 
 def best_tune(X_train, y_train, model, params):
@@ -49,21 +50,14 @@ LinR = LinearRegression()
 Rid = Ridge()
 Rfc = RandomForestRegressor(random_state=2)
 Dtc = DecisionTreeRegressor(random_state=2)
-Boost_Lin = AdaBoostRegressor(base_estimator=LinR, random_state=2)
-Boost_las = AdaBoostRegressor(base_estimator=Las, random_state=2)
-Boost_rid = AdaBoostRegressor(base_estimator=Rid, random_state=2)
-Bg_Lin = BaggingRegressor(base_estimator=LinR, random_state=2)
-Bg_las = BaggingRegressor(base_estimator=Las, random_state=2)
-Bg_rid = BaggingRegressor(base_estimator=Rid, random_state=2)
-Boost_dtc = AdaBoostRegressor(base_estimator=Dtc, random_state=2)
 # Las, LinR, Rid, Dtc, Rfc, Boost_Lin, Boost_las, Boost_rid, Bg_Lin, Bg_las, Bg_rid
 # 'Lasso', 'Linear Regression', 'Ridge', 'Random forest Regressor', 'Decision Tree Regressor',
 #               'Boosted Linear',
 #               'Boosted Lasso', 'Boosted Ridge', 'Bagged Linear', 'Bagged Lasso', 'Bagged Ridge'
 
 
-zipped = zip([Boost_dtc],
-             ['Boosted Decision Tree'])
+zipped = zip([Las, LinR, Rid, Rfc, Dtc],
+             ['Lasso', 'Linear', 'Ridge', 'Random Forest', 'Decision Tree'])
 
 
 def run_model(trainX, trainY, model_list=zipped):
@@ -76,17 +70,20 @@ def run_model(trainX, trainY, model_list=zipped):
  """""""""
 
  # Tune parameters
- model_params = {'Random forest Regressor': {'max_depth': [80, 90, 100, 110], 'min_samples_split': [8, 10, 12],
-                                             'n_estimators': [100, 200]},
-                 'Lasso': {'alpha': range(1, 10)},
-                 'Ridge': {'alpha': range(1, 10)},
-                 'Decision Tree Regressor': {'max_depth': [80, 90, 100, 110], 'min_samples_split': [8, 10, 12]}}
+ model_params = {'Random Forest': {'base_estimator__max_depth': [80, 90, 100, 110],
+                                   'base_estimator__min_samples_split': [8, 10, 12],
+                                   'n_estimators': [50, 100, 150]},
+                 'Lasso': {'base_estimator__alpha': range(1, 10), 'n_estimator': [50, 100, 150]},
+                 'Ridge': {'base_estimator__alpha': range(1, 10), 'n_estimator': [50, 100, 150]},
+                 'Decision Tree': {'base_estimator__max_depth': [80, 90, 100, 110],
+                                   'base_estimator__min_samples_split': [8, 10, 12],
+                                   'n_estimators': [50, 100, 150]}}
 
  #####
  scores = []
  scores_boost = []
  scores_bag = []
- for model, name in model_list:
+ for model, name in tqdm(model_list):
   boost = AdaBoostRegressor(base_estimator=model)
   bag = BaggingRegressor(base_estimator=model)
 

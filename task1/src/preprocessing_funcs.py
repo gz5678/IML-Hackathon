@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib as plt
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import LabelEncoder
 import re
 from plotnine import *
 import inflect
@@ -81,18 +81,26 @@ def make_categorical(name,df):
 
 def all_categoricals(merged_data):
 
-    Reporting_Airline_bin = make_categorical('Reporting_Airline',merged_data)
+    Reporting_Airline_cat = pd.DataFrame({'Reporting_Airline': LabelEncoder().fit_transform(merged_data['Reporting_Airline'])})
 
-    Origin_bin = make_categorical(r'Origin',merged_data)
-    OriginState_bin = make_categorical(r'OriginState',merged_data)
+    Origin_cat = pd.DataFrame({'Origin': LabelEncoder().fit_transform(merged_data['Origin'])})
+    OriginState_cat = pd.DataFrame({'OriginState': LabelEncoder().fit_transform(merged_data['OriginState'])})
     
-    Dest_bin = make_categorical(r'Dest',merged_data)
-    DestState_bin = make_categorical(r'DestState',merged_data)
+    Dest_cat = pd.DataFrame({'Dest': LabelEncoder().fit_transform(merged_data['Dest'])})
+    DestState_cat = pd.DataFrame({'DestState': LabelEncoder().fit_transform(merged_data['DestState'])})
+    Day_cat = pd.DataFrame({'DayOfWeek': LabelEncoder().fit_transform(merged_data['DayOfWeek'])})
     
-    flights_binarized = pd.concat(([Reporting_Airline_bin,Origin_bin,OriginState_bin,Dest_bin,
-                                        DestState_bin]),axis=1)
+    flights_binarized = pd.concat(([Reporting_Airline_cat,Origin_cat,OriginState_cat,Dest_cat,
+                                        DestState_cat, Day_cat]),axis=1)
     
-    merged_data = merged_data.drop(['Reporting_Airline', 'Origin','OriginCityName','OriginState','Dest','DestCityName','DestState'], axis=1)
+    merged_data = merged_data.drop(['Reporting_Airline',
+                                    'Origin',
+                                    'OriginCityName',
+                                    'OriginState',
+                                    'Dest',
+                                    'DestCityName',
+                                    'DestState',
+                                    'DayOfWeek'], axis=1)
     merged_data = pd.concat([merged_data, flights_binarized], axis=1)
     return merged_data
 
