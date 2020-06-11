@@ -62,8 +62,8 @@ class FlightPredictor:
         # y_train.to_pickle('y_train.pkl')
         # X_train = pd.read_pickle('x_train.pkl')
         # y_train = pd.read_pickle('y_train.pkl')
-        X_train_short = X_train.iloc[:10000, :]
-        y_train_short = y_train.iloc[:10000]
+        X_train_short = X_train.iloc[:150000, :]
+        y_train_short = y_train.iloc[:150000]
         full_df = pd.concat([X_train_short, y_train_short], axis=1)
         full_df = full_df.dropna()
         y_train_short = full_df['ArrDelay']
