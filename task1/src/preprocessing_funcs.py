@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
 import matplotlib as plt
+from sklearn.preprocessing import LabelBinarizer
 import re
 from plotnine import *
+import inflect
 
 
 def fix_weather_data(weather_data):
@@ -41,17 +43,17 @@ def merge_tables(flight_data, weather_data):
 
 
 def crs_to_time(df):
+    p = inflect.engine()
     for col in ['CRSDepTime', 'CRSArrTime']:
-        time_col = df[col].astype(int).astype(str)
-        time_col = time_col.apply(lambda x: x.zfill(4))
-        time_col = time_col.apply(lambda x: re.sub(r'24(\d\d)',
-                                                   r'00\1',
-                                                   x))
-        time_col = pd.to_datetime(time_col,
-                                  format="%H%M")
-        time_col = time_col.apply(lambda x: x.time())
-        df[col] = time_col
+        dummy_pred = col.split('Time')[0]
+        col_name = col + "_Code"
+        df[col] = df[col].apply(lambda x: x if x <= 2359 else 0)
+        df[col_name] = df[col].apply(lambda x: np.floor(x / 100))
+        df['temp'] = df[col_name].apply(lambda x: p.number_to_words(int(x / 6)))
+        print(df['temp'].head())
+        df = pd.get_dummies(df, prefix=dummy_pred, columns=['temp'], drop_first=True)
     return df
+
 
 def make_categorical(name,df):
     dummies = pd.get_dummies(pd.Series(df[name]), drop_first=True, prefix = name)
@@ -60,7 +62,6 @@ def make_categorical(name,df):
 
 def all_categoricals(merged_data):
 
-    
     Reporting_Airline_bin = make_categorical('Reporting_Airline',merged_data)
 
     Origin_bin = make_categorical(r'Origin',merged_data)
@@ -68,8 +69,6 @@ def all_categoricals(merged_data):
     
     Dest_bin = make_categorical(r'Dest',merged_data)
     DestState_bin = make_categorical(r'DestState',merged_data)
-    
-    
     
     flights_binarized = pd.concat(([Reporting_Airline_bin,Origin_bin,OriginState_bin,Dest_bin,
                                         DestState_bin]),axis=1)
