@@ -4,6 +4,19 @@ import matplotlib as plt
 from plotnine import *
 
 
+def fix_weather_data(weather_data):
+    """
+    * replace "None" string and -100,-99 with nan
+    * change all columns except date and station to numeric
+    * replace temperatures over 130 farenheit with nan
+    """
+    weather_data.replace(to_replace=["None","-100","-99"], value=np.nan, inplace=True)    
+    weather_data.iloc[:,2:] = weather_data.iloc[:,2:].apply(pd.to_numeric)    
+    weather_data['max_temp_f'][weather_data['max_temp_f']>130] = np.nan
+    return weather_data
+
+
+
 def merge_tables(flight_data, weather_data):
     # Create origin and dest data
     weather_origin = weather_data.drop(columns=['station', 'FlightDate'])
@@ -23,3 +36,5 @@ def merge_tables(flight_data, weather_data):
     temp = flight_data.merge(weather_origin, on=['Origin', 'FlightDate'], how='left')
     merged = temp.merge(weather_dest, on=['Dest', 'FlightDate'], how='left')
     return merged
+
+

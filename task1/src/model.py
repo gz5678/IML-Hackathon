@@ -28,6 +28,7 @@ class FlightPredictor:
         train_data['FlightDate'] = train_data['FlightDate'].apply(lambda x: re.sub(r'(\d\d)(\d\d)(-\d+-)(\d+)',
                                                                                    r'\4\3\2',
                                                                                    x))
+        weather_data = pre_funcs.fix_weather_data(weather_data)
         merged_table = pre_funcs.merge_tables(train_data, weather_data)
         raise NotImplementedError
 
