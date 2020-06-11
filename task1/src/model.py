@@ -31,13 +31,15 @@ class FlightPredictor:
         train_data['FlightDate'] = train_data['FlightDate'].apply(lambda x: re.sub(r'(\d\d)(\d\d)(-\d+-)(\d+)',
                                                                                    r'\4\3\2',
                                                                                    x))
-        weather_data = pre_funcs.fix_weather_data(weather_data)
         merged_table = pre_funcs.merge_tables(train_data, weather_data)
-        merged_table = pre_funcs.all_categoricals(merged_table)
+        # merged_table.to_pickle('merged_table.pkl')
+        # merged_table = pd.read_pickle('merged_table.pkl')
         y = merged_table['ArrDelay']
         X = merged_table.drop(columns=['ArrDelay', 'DelayFactor'])
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True)
         X_val, X_test, y_val, y_test = train_test_split(X_test, y_test, test_size=0.5, shuffle=True)
+        X_train = pre_funcs.fix_weather_data(X_train)
+        X_train = pre_funcs.all_categoricals(X_train)
         raise NotImplementedError
 
     def predict(self, x):
