@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib as plt
+import re
 from plotnine import *
 
 
@@ -37,4 +38,17 @@ def merge_tables(flight_data, weather_data):
     merged = temp.merge(weather_dest, on=['Dest', 'FlightDate'], how='left')
     return merged
 
+
+def crs_to_time(df):
+    for col in ['CRSDepTime', 'CRSArrTime']:
+        time_col = df[col].astype(int).astype(str)
+        time_col = time_col.apply(lambda x: x.zfill(4))
+        time_col = time_col.apply(lambda x: re.sub(r'24(\d\d)',
+                                                   r'00\1',
+                                                   x))
+        time_col = pd.to_datetime(time_col,
+                                  format="%H%M")
+        time_col = time_col.apply(lambda x: x.time())
+        df[col] = time_col
+    return df
 
