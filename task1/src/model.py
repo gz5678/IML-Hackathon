@@ -16,7 +16,7 @@ import re
 import feather
 from sklearn.model_selection import train_test_split
 import preprocessing_funcs as pre_funcs
-
+from sklearn.preprocessing import LabelBinarizer
 
 class FlightPredictor:
     def __init__(self, path_to_weather='all_weather_data.csv'):
@@ -33,6 +33,7 @@ class FlightPredictor:
                                                                                    x))
         weather_data = pre_funcs.fix_weather_data(weather_data)
         merged_table = pre_funcs.merge_tables(train_data, weather_data)
+        merged_table = pre_funcs.all_categoricals(merged_table)
         y = merged_table['ArrDelay']
         X = merged_table.drop(columns=['ArrDelay', 'DelayFactor'])
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True)
