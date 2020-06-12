@@ -145,3 +145,11 @@ def fix_weather_test_data(weather_data):
         weather_data[varlist] = weather_data[varlist].fillna(weather_data.groupby(['month'])[varlist].transform('mean'))
     weather_data = weather_data.drop(columns='month', axis = 1)
     return weather_data
+
+def prepare_classify(df):
+    le_classify = LabelEncoder()
+    df['DelayFactor'] = df['DelayFactor'].replace(to_replace=[np.nan], value="NotDelayed")
+    encoding = le_classify.fit(df['DelayFactor'])
+    encoding_mapping = dict(zip(encoding.transform(encoding.classes_), encoding.classes_))
+    df['DelayFactor'] = le_classify.fit_transform(df['DelayFactor'])
+    return df, encoding_mapping

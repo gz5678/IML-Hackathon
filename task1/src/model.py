@@ -62,20 +62,25 @@ class FlightPredictor:
         # y_train.to_pickle('y_train.pkl')
         # X_train = pd.read_pickle('x_train.pkl')
         # y_train = pd.read_pickle('y_train.pkl')
-        X_train_short = X_train.iloc[:150000, :]
-        y_train_short = y_train.iloc[:150000]
-        full_df = pd.concat([X_train_short, y_train_short], axis=1)
+        full_df = pd.concat([X_train, y_train, merged_table['DelayFactor']], axis=1)
+        full_df, encoding_mapping = pre_funcs.prepare_classify(full_df)
         full_df = full_df.dropna()
-        y_train_short = full_df['ArrDelay']
-        X_train_short = full_df.drop(columns=['ArrDelay'])
-        boost, bag, mod = models_exec.run_model(X_train_short, y_train_short)
-        # print("The boost scores is: ")
-        # print(scores_boost)
-        # print("The bag scores is: ")
-        # print(scores_bag)
-        # print("The scores is: ")
-        # print(scores)
-        raise NotImplementedError
+        y_train = full_df['ArrDelay']
+        X_train = full_df.drop(columns=['ArrDelay', 'DelayFactor'])
+        # score = models_exec.run_model(X_train_short, y_train_short)
+        reg_model = models_exec.run_regression(X_train, y_train)
+        y_hat_reg = reg_model.predict(X_train)
+        y_hat_reg = pd.DataFrame({'ArrDelay': y_hat_reg})
+
+        # Run classification
+        y_train = full_df['DelayFactor']
+        X_train = full_df.drop(columns=['ArrDelay', 'DelayFactor'])
+        X_train = pd.concat([X_train, y_hat_reg], axis=1)
+        class_model = models_exec.run_classify(X_train, y_train)
+        y_class_hat = class_model.predict(X_train)
+        y_class_hat = pd.DataFrame({'DelayFactor': y_class_hat}).apply(lambda x: encoding_mapping[x])
+        print(y_class_hat.head())
+        return
 
     def predict(self, x):
         """

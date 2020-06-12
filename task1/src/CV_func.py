@@ -5,16 +5,12 @@ from plotnine import *
 #import preprocessing_funcs as pre_funcs
 from sklearn.model_selection import cross_validate
 from sklearn.model_selection import GridSearchCV
-
-# importing Various regression algorithms
-#from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-#from sklearn.preprocessing import LabelEncoder
-from sklearn.linear_model import Lasso,LinearRegression,Ridge
+from sklearn.linear_model import Lasso,LinearRegression,Ridge, LogisticRegression
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor,AdaBoostRegressor,BaggingRegressor
-from sklearn.metrics import mean_absolute_error,mean_squared_error,r2_score
+from sklearn.ensemble import RandomForestRegressor,AdaBoostRegressor,BaggingRegressor, RandomForestClassifier
+from xgboost import XGBRegressor
 from tqdm import tqdm
+import pickle
 
 
 def my_cross(X_train, y_train, model):
@@ -46,18 +42,11 @@ def best_tune(X_train, y_train, model, params):
 
 # prep model_list
 Las = Lasso()
-LinR = LinearRegression()
-Rid = Ridge()
 Rfc = RandomForestRegressor(random_state=2)
-Dtc = DecisionTreeRegressor(random_state=2)
-# Las, LinR, Rid, Dtc, Rfc, Boost_Lin, Boost_las, Boost_rid, Bg_Lin, Bg_las, Bg_rid
-# 'Lasso', 'Linear Regression', 'Ridge', 'Random forest Regressor', 'Decision Tree Regressor',
-#               'Boosted Linear',
-#               'Boosted Lasso', 'Boosted Ridge', 'Bagged Linear', 'Bagged Lasso', 'Bagged Ridge'
+Xgb = XGBRegressor(random_state=2)
 
-
-zipped = zip([Las, LinR, Rid, Rfc, Dtc],
-             ['Lasso', 'Linear', 'Ridge', 'Random Forest', 'Decision Tree'])
+zipped = zip([Rfc, Las, Xgb],
+             ['Random Forest', 'Lasso', 'XGB'])
 
 
 def run_model(trainX, trainY, model_list=zipped):
@@ -70,33 +59,50 @@ def run_model(trainX, trainY, model_list=zipped):
  """""""""
 
  # Tune parameters
- model_params = {'Random Forest': {'base_estimator__max_depth': [80, 90, 100, 110],
-                                   'base_estimator__min_samples_split': [8, 10, 12],
-                                   'n_estimators': [50, 100, 150]},
-                 'Lasso': {'base_estimator__alpha': range(1, 10), 'n_estimator': [50, 100, 150]},
-                 'Ridge': {'base_estimator__alpha': range(1, 10), 'n_estimator': [50, 100, 150]},
-                 'Decision Tree': {'base_estimator__max_depth': [80, 90, 100, 110],
-                                   'base_estimator__min_samples_split': [8, 10, 12],
-                                   'n_estimators': [50, 100, 150]}}
+ model_params = {'Random Forest': {'max_depth': [80, 90, 100, 110],
+                                   'min_samples_split': [8, 10, 12],
+                                   'n_estimators': [150]},
+                 'Lasso': {'alpha': [3, 6, 8]},
+                 'XGB': {'max_depth': [10, 30, 50],
+                         'min_child_weight': [1, 3, 6],
+                         'n_estimators': [200],
+                         'learning_rate': [0.05, 0.1, 0.16]}}
+
 
  #####
  scores = []
- scores_boost = []
- scores_bag = []
  for model, name in tqdm(model_list):
-  boost = AdaBoostRegressor(base_estimator=model)
-  bag = BaggingRegressor(base_estimator=model)
-
   if name in model_params.keys():
-
-   scores_boost.append(best_tune(trainX, trainY, boost, model_params[name]))
-   scores_bag.append(best_tune(trainX, trainY, bag, model_params[name]))
-
    scores.append(best_tune(trainX, trainY, model, model_params[name]))
   else:
-   scores_boost.append(my_cross(trainX, trainY, boost))
-   scores_bag.append(my_cross(trainX, trainY, bag))
-
    scores.append(my_cross(trainX, trainY, model))
 
- return scores_boost, scores_bag, scores
+ return scores
+
+def run_classification(X_train, y_train):
+    params = {
+        'max_depth': [80, 90, 100, 110],
+        'min_samples_split': [8, 10, 12],
+        'n_estimators': [150]
+    }
+    model = RandomForestClassifier(random_state=2).fit(X_train, y_train)
+    return best_tune(X_train, y_train, model, params)
+
+def run_regression(X_train, y_train):
+    model = RandomForestRegressor(random_state=2,
+                                  max_depth=80,
+                                  min_samples_split=10,
+                                  n_estimators=150).fit(X_train, y_train)
+    filename = 'final_reg_model_RandForest.sav'
+    pickle.dump(model, open(filename, 'wb'))
+    return model
+
+
+def run_classify(X_train, y_train):
+    model = RandomForestClassifier(random_state=2,
+                                   max_depth=80,
+                                   min_samples_split=12,
+                                   n_estimators=150).fit(X_train, y_train)
+    filename = 'final_class_model_RandForest.sav'
+    pickle.dump(model, open(filename, 'wb'))
+    return model
